@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livraria</title>
+<script>
+    function loadData() {
+    fetch('insert.php?action=read')
+    .then(response => response.json())
+    .then(data => {
+        let table = document.getElementById('livraria');
+        table.innerHTML = '';
+        data.forEach(row => {
+            table.innerHTML += `
+                <tr>
+                    <td>${row.id}</td>
+                    <td>${row.titulo}</td>
+                    <td>${row.autor}</td>
+                    <td>${row.ano}</td>
+                    <td>
+                        <button onclick="edit(${row.id}, '${row.titulo}', '${row.autor}', '${row.ano}')">Editar</button>
+                        <button onclick="remove(${row.id})">Deletar</button>
+                    </td>
+                </tr>
+                `;    
+        });
+    });
+}
+function save() {
+    let id = document.getElementById('id').value;
+    let titulo = document.getElementById('titulo').value;
+    let autor = document.getElementById('autor').value;
+    let ano = document.getElementById('ano').value;
+
+    let formData = new FormData();
+    formData.append('id', id);
+    formData.append('titulo', titulo);
+    formData.append('autor', autor);
+    formData.append('ano', ano);
+
+    let action = id? 'update' : 'create';
+
+    fetch('insert.php?action=' + action, {
+    method: 'POST',
+    body: formData
+})
+    .then(response => response.text())
+    .then(data => {
+        alert(data);
+        loadData();
+        clearForm();
+    });
+}
+    function edit(id, titulo, autor, ano) {
+            document.getElementById('id').value = id;
+            document.getElementById('titulo').value = titulo;
+            document.getElementById('autor').value = autor;
+            document.getElementById('ano').value = ano;
+}
+    function remove(id) {
+        if (confirm('Tem certeza que deseja deletar?')) {
+            fetch('insert.php?action=delete&id=' + id)
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    loadData();
+                });
+        }
+    }
+    function clearForm() {
+        document.getElementById('id').value = '';
+        document.getElementById('titulo').value = '';
+        document.getElementById('autor').value = '';
+        document.getElementById('ano').value = '';
+    }
+
+    window.onload = loadData;
+</script>
+
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f0f0f0; }
+        h1 { color: #333; }
+        form, table { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 5px #aaa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        a { color: red; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h2>Livraria</h2>
+    <form onsubmit="event.preventDefault(); save();">
+        <input type="hidden" id="id">
+        <label for="titulo">titulo:</label>
+        <input type="text" id="titulo" required><br><br>
+
+        <label for="autor">autor:</label>
+        <input type="text" id="autor" required><br><br>
+
+        <label for="ano">ano:</label>
+        <input type="number" id="ano" required><br><br>
+
+        <input type="submit" value="Salvar">
+        <button type="button" onclick="clearForm()">Limpar</button>
+    </form>
+    <h3>Registros</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>TITULO</th>
+                <th>AUTOR</th>
+                <th>ANO</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="livraria"></tbody>
+    </table>
+</body>
+</html>
+
+
+
+
+
+
+
+

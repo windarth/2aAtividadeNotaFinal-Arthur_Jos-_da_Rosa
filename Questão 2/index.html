@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciador de Tarefas</title>
+</head>
+<script>
+function loadData() {
+    fetch('index.php?action=read')
+    .then(response => response.json())
+    .then(data => {
+        let table = document.getElementById('tarefas');
+        table.innerHTML = '';
+        data.forEach(row => {
+            table.innerHTML += `
+                <tr>
+                    <td>${row.id}</td>
+                    <td>${row.descricao}</td>
+                    <td>${row.data_vencimento}</td>
+                    <td>${row.concluida == 1 ? 'Concluida' : 'Não Concluida'}</td>
+                    <td>
+                        <button onclick="edit(${row.id}, '${row.descricao}', '${row.data_vencimento}', ${row.concluida})">Editar</button>
+                        <button onclick="remove(${row.id})">Deletar</button>
+                        ${row.concluida == 0 ? `<button onclick="concluir(${row.id})">Concluir</button>` : ''}
+                    </td>
+                </tr>
+            `;
+        });
+    });
+}
+
+function save() {
+    let id = document.getElementById('id').value;
+    let descricao = document.getElementById('descricao').value;
+    let data_vencimento = document.getElementById('data_vencimento').value;
+    let concluida = document.getElementById('concluida').checked ? 1 : 0;
+
+    let formData = new FormData();
+    formData.append('id', id);
+    formData.append('descricao', descricao);
+    formData.append('data_vencimento', data_vencimento);
+    formData.append('concluida', concluida);
+
+    let action = id ? 'update' : 'create';
+
+    fetch('add.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert(data);
+        loadData();
+        clearForm();
+    });
+}
+
+function edit(id, descricao, data_vencimento, concluida) {
+    document.getElementById('id').value = id;
+    document.getElementById('descricao').value = descricao;
+    document.getElementById('data_vencimento').value = data_vencimento;
+    document.getElementById('concluida').checked = concluida == 1;
+}
+
+function remove(id) {
+    if (confirm('Tem certeza que deseja deletar?')) {
+        fetch('delete.php?id=' + id)
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                loadData();
+            });
+    }
+}
+
+function concluir(id) {
+    fetch('concluir.php?id=' + id)
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+            loadData();
+        });
+}
+
+function clearForm() {
+    document.getElementById('id').value = '';
+    document.getElementById('descricao').value = '';
+    document.getElementById('data_vencimento').value = '';
+    document.getElementById('concluida').checked = false;
+}
+
+window.onload = loadData;
+</script>
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f0f0f0; }
+        h1 { color: #333; }
+        form, table { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 5px #aaa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        a { color: red; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+<body>
+    <h1>Lista de Tarefas</h1>
+
+    <h1>Gerenciador de Tarefas</h1>
+
+    <h2>Adicionar Tarefa</h2>
+    <input type="text" id="descricao" placeholder="Descrição">
+    <input type="date" id="data_vencimento">
+    <button onclick="adicionarTarefa()">Adicionar</button>
+
+    <h2>Tarefas Não Concluídas</h2>
+    <ul id="tarefas-nao"></ul>
+
+    <h2>Tarefas Concluídas</h2>
+    <ul id="tarefas-sim"></ul>
+</body>
+</html>
